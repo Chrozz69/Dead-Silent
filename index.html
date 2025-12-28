@@ -6,16 +6,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         body { margin: 0; background: #000; color: #44ff44; font-family: 'Courier New', monospace; overflow: hidden; }
-        .ui-layer { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.9); z-index: 100; text-align: center; }
-        .log-box { border: 1px solid #44ff44; padding: 40px; background: rgba(0,10,0,0.95); min-width: 400px; box-shadow: 0 0 30px rgba(0,255,0,0.2); }
-        h1 { letter-spacing: 12px; margin-bottom: 30px; text-shadow: 0 0 10px #44ff44; }
-        button { background: transparent; color: #44ff44; border: 1px solid #44ff44; padding: 12px 30px; cursor: pointer; margin: 10px; font-family: inherit; font-size: 1.1em; transition: 0.3s; width: 250px; }
+        .ui-layer { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.95); z-index: 100; text-align: center; }
+        .log-box { border: 1px solid #44ff44; padding: 40px; background: #000; min-width: 350px; }
+        h1 { letter-spacing: 8px; margin-bottom: 30px; }
+        button { background: transparent; color: #44ff44; border: 1px solid #44ff44; padding: 12px; margin: 8px; width: 260px; cursor: pointer; font-family: inherit; transition: 0.2s; }
         button:hover:not(:disabled) { background: #44ff44; color: #000; }
         button:disabled { border-color: #222; color: #222; cursor: not-allowed; }
-        .setting-row { margin: 15px 0; display: flex; justify-content: space-between; align-items: center; width: 100%; }
-        #subtitles { position: absolute; bottom: 15%; width: 100%; text-align: center; color: white; font-size: 1.4em; text-shadow: 2px 2px 4px #000; z-index: 50; pointer-events: none; }
+        #subtitles { position: absolute; bottom: 15%; width: 100%; text-align: center; color: #fff; font-size: 1.3em; z-index: 50; text-shadow: 2px 2px 2px #000; pointer-events: none; }
         #canvas-container { position: absolute; inset: 0; z-index: 1; }
-        input[type=range] { accent-color: #44ff44; width: 150px; }
     </style>
 </head>
 <body>
@@ -26,38 +24,43 @@
     <div class="log-box">
         <h1>DEAD SILENT</h1>
         <button onclick="showUI('chapter-select')">START</button><br>
-        <button onclick="showUI('settings')">SETTINGS</button><br>
-        <button onclick="window.close(); alert('Exit protocol initialized.')">EXIT</button>
+        <button onclick="showUI('settings')">SETTING</button><br>
+        <button onclick="alert('Exit successful.')">EXIT</button>
     </div>
 </div>
 
 <div id="settings" class="ui-layer" style="display:none">
     <div class="log-box">
-        <h2>CONFIGURATION</h2>
-        <div class="setting-row"><span>VOLUME</span><input type="range" id="vol-slider" oninput="updateSettings()"></div>
-        <div class="setting-row"><span>LIGHTING</span><input type="range" id="light-slider" oninput="updateSettings()"></div>
-        <div class="setting-row"><span>SCHEME</span><select id="color-scheme" onchange="updateSettings()"><option value="green">NEURAL GREEN</option><option value="amber">STATION AMBER</option></select></div>
+        <h2>SETTING</h2>
+        <p>VOLUME: <input type="range" id="vol" value="50"></p>
+        <p>LIGHTING: <input type="range" id="bright" value="70"></p>
         <button onclick="showUI('main-menu')">BACK</button>
     </div>
 </div>
 
 <div id="chapter-select" class="ui-layer" style="display:none">
     <div class="log-box">
-        <h2>RECONSTRUCTION HUB</h2>
-        <button onclick="startChapter1()">CHAPTER 1: LIAM</button><br>
-        <button onclick="alert('WIP: Work in Progress');">CHAPTER 2: THE PARTY</button><br>
-        <button disabled>COMING SOON</button><br>
+        <h2>RECONSTRUCTION</h2>
+        <button onclick="prepChapter1()">CHAPTER 1</button><br>
+        <button onclick="showWIP()">CHAPTER 2</button><br>
+        <button disabled>CHAPTER 3 (COMING SOON)</button><br>
         <button onclick="showUI('main-menu')">BACK</button>
+    </div>
+</div>
+
+<div id="ch1-intro" class="ui-layer" style="display:none">
+    <div class="log-box">
+        <h2>CHAPTER 1</h2>
+        <p style="color: #888;">Liam and the forest's beauty</p>
+        <button onclick="startGameplay()">SYNCHRONIZE</button>
     </div>
 </div>
 
 <div id="subtitles"></div>
 
 <script>
-let scene, camera, renderer, entity, fireLight, ambientLight;
-let isPlaying = false, gameState = "menu", encounterCount = 0;
-let yaw = 0, pitch = 0, targetVolume = 0.4, currentVolume = 0.4;
-let audioCtx, drone;
+let scene, camera, renderer, entity, fireLight, isPlaying = false;
+let audioCtx, droneGain, gameState = "menu";
 
 function showUI(id) {
     document.querySelectorAll('.ui-layer').forEach(l => l.style.display = 'none');
@@ -65,119 +68,99 @@ function showUI(id) {
     gameState = (id === 'main-menu') ? "menu" : "ui";
 }
 
-function updateSettings() {
-    targetVolume = document.getElementById('vol-slider').value / 100;
-    const lVal = document.getElementById('light-slider').value / 100;
-    if(fireLight) fireLight.intensity = lVal * 5;
-    const color = document.getElementById('color-scheme').value === 'green' ? '#44ff44' : '#ffb000';
-    document.querySelectorAll('.log-box, button').forEach(el => el.style.borderColor = color);
-    document.body.style.color = color;
+function showWIP() {
+    const box = document.querySelector('#chapter-select .log-box');
+    const oldContent = box.innerHTML;
+    box.innerHTML = "<h2>WORK IN PROGRESS</h2><button onclick='location.reload()'>BACK</button>";
 }
 
-// 3D SCENE INITIALIZATION
 function initEngine() {
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000205);
-    scene.fog = new THREE.FogExp2(0x000205, 0.1);
-
+    scene.background = new THREE.Color(0x000204);
     camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 1000);
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-    // Basic Environment (Tent, Campfire)
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(50, 50), new THREE.MeshStandardMaterial({color: 0x0a1108}));
+    // Camp Map (Spinning in background)
+    const ground = new THREE.Mesh(new THREE.CircleGeometry(15, 32), new THREE.MeshStandardMaterial({color: 0x111111}));
     ground.rotation.x = -Math.PI/2;
     scene.add(ground);
-
-    const tent = new THREE.Mesh(new THREE.ConeGeometry(2, 2.5, 4), new THREE.MeshStandardMaterial({color: 0x1a2e1a}));
-    tent.position.set(-4, 1.25, -3);
-    scene.add(tent);
 
     fireLight = new THREE.PointLight(0xff4400, 4, 15);
     fireLight.position.set(0, 0.5, 0);
     scene.add(fireLight);
 
-    entity = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 2.2), new THREE.MeshBasicMaterial({color: 0xffffff, transparent:true, opacity:0}));
+    entity = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2), new THREE.MeshBasicMaterial({color: 0xffffff, transparent: true, opacity: 0}));
     scene.add(entity);
 
     animate();
 }
 
-function startChapter1() {
-    showUI('none');
+function prepChapter1() {
+    showUI('ch1-intro');
     gameState = "intro";
-    camera.position.set(0, 1.7, 5);
-    camera.lookAt(0, 0.5, 0); // Focus on fire
-    
-    // Audio Init
-    audioCtx = new AudioContext();
-    drone = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    drone.connect(gain).connect(audioCtx.destination);
-    drone.start();
-    
-    runStorySequence();
+    camera.position.set(0, 2, 8);
+    camera.lookAt(0, 0, 0);
 }
 
-async function runStorySequence() {
+async function startGameplay() {
+    showUI('none');
+    gameState = "playing";
+    
+    // Setup Audio
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    droneGain = audioCtx.createGain();
+    const osc = audioCtx.createOscillator();
+    osc.frequency.value = 50;
+    osc.connect(droneGain).connect(audioCtx.destination);
+    osc.start();
+    
+    runLiamSequence();
+}
+
+async function runLiamSequence() {
     const sub = document.getElementById('subtitles');
     
-    // Phase 1: Muting Ambient
-    sub.innerText = "LIAM: 'The fire was crackling... but then everything started going quiet.'";
-    await fadeVolume(0, 4000);
-    sub.innerText = "LIAM: 'Wait... why can't I hear the wind? Sarah? Mark?'";
-    
-    // Phase 2: Encounter Loop
-    for(encounterCount = 1; encounterCount <= 3; encounterCount++) {
+    for(let i=1; i<=3; i++) {
+        // 1. Mute Volume
+        sub.innerText = "LIAM: 'The woods are going quiet... Sarah? Anyone?'";
+        await fadeVolume(0, 3000);
+        
+        // 2. Spawn & Look
         spawnEntity();
-        await lookAtEntity();
-        sub.innerText = encounterCount < 3 ? "LIAM: 'Who is that? Hey! Are you lost?'" : "LIAM: 'She's just... staring.'";
+        camera.lookAt(entity.position);
+        sub.innerText = i === 1 ? "LIAM: 'Who's that? A girl? Hey!'" : "LIAM: 'There she is again... how is she moving so fast?'";
         
+        await new Promise(r => setTimeout(r, 2500));
+        entity.material.opacity = 0; // Vanish
+        
+        // 3. Return Sound
+        sub.innerText = "LIAM: 'She's gone. The sound is back...'";
+        await fadeVolume(0.2, 1000);
         await new Promise(r => setTimeout(r, 2000));
-        entity.material.opacity = 0; // Disappear
-        
-        sub.innerText = "LIAM: 'She's gone. And the sound... it's back.'";
-        await fadeVolume(targetVolume, 1500);
-        await new Promise(r => setTimeout(r, 2000));
-        
-        if(encounterCount < 3) {
-            sub.innerText = "LIAM: 'There! She's over there now!'";
-            await fadeVolume(0, 1000);
-        }
     }
-    
-    sub.innerText = "LIAM: 'I thought it was just a weird night. I didn't know I was being hunted.'";
-    setTimeout(() => location.reload(), 5000);
+
+    sub.innerText = "LIAM: 'I thought it was just a weird night. I didn't know the threat was real.'";
+    setTimeout(() => location.reload(), 4000);
 }
 
 function spawnEntity() {
-    const angle = Math.random() * Math.PI * 2;
-    const dist = 8 + Math.random() * 5;
-    entity.position.set(Math.cos(angle)*dist, 1.1, Math.sin(angle)*dist);
-    entity.material.opacity = 0.7;
+    const ang = Math.random() * Math.PI * 2;
+    entity.position.set(Math.cos(ang)*7, 1, Math.sin(ang)*7);
+    entity.material.opacity = 0.6;
 }
 
-async function fadeVolume(val, duration) {
-    const start = currentVolume;
-    const steps = 20;
-    for(let i=0; i<=steps; i++) {
-        currentVolume = start + (val - start) * (i/steps);
-        // Apply to audio engine here
-        await new Promise(r => setTimeout(r, duration/steps));
-    }
-}
-
-async function lookAtEntity() {
-    const targetPos = entity.position.clone();
-    // Logic to smoothly rotate camera to entity
-    camera.lookAt(targetPos);
+function fadeVolume(target, duration) {
+    if(!droneGain) return;
+    droneGain.gain.exponentialRampToValueAtTime(target + 0.001, audioCtx.currentTime + duration/1000);
+    return new Promise(r => setTimeout(r, duration));
 }
 
 function animate() {
     requestAnimationFrame(animate);
-    if(gameState === "menu") {
-        scene.rotation.y += 0.005; // Spinning map review
+    if(gameState === "menu" || gameState === "intro") {
+        scene.rotation.y += 0.005;
     }
     renderer.render(scene, camera);
 }

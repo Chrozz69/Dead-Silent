@@ -2,95 +2,113 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Incident 01: Final Recovery</title>
+    <title>Incident 01: Pine Ridge</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         body { margin: 0; background: #000; color: #44ff44; font-family: 'Courier New', monospace; overflow: hidden; }
-        #hud { position: absolute; inset: 0; z-index: 50; padding: 30px; pointer-events: none; }
-        .box { border: 1px solid #44ff44; background: rgba(0,0,0,0.85); padding: 15px; position: absolute; pointer-events: auto; }
-        #top-left { top: 40px; left: 40px; width: 300px; }
-        #bottom-msg { bottom: 150px; left: 50%; transform: translateX(-50%); width: 450px; text-align: center; }
-        #radar-ui { position: absolute; bottom: 40px; right: 40px; text-align: right; }
-        #radar-circle { width: 120px; height: 120px; border: 1px solid #44ff44; border-radius: 50%; position: relative; margin-top: 10px; }
-        #blip { position: absolute; width: 5px; height: 5px; background: #ff0000; border-radius: 50%; top: 50%; left: 50%; box-shadow: 0 0 10px #ff0000; }
-        button { background: none; border: 1px solid #44ff44; color: #44ff44; padding: 5px 15px; cursor: pointer; margin-top: 10px; font-family: inherit; }
+        .ui-layer { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; z-index: 100; text-align: center; padding: 20px; }
+        .log-box { border: 1px solid #44ff44; padding: 30px; background: rgba(0,20,0,0.9); max-width: 500px; box-shadow: 0 0 15px rgba(0,255,0,0.2); }
+        #hud { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 50; }
+        .radar { position: absolute; bottom: 40px; right: 40px; width: 120px; height: 120px; border: 1px solid #44ff44; border-radius: 50%; }
+        #blip { position: absolute; width: 6px; height: 6px; background: #ff0000; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%); box-shadow: 0 0 10px #f00; }
+        button { background: transparent; color: #44ff44; border: 1px solid #44ff44; padding: 10px 20px; cursor: pointer; margin-top: 20px; font-family: inherit; text-transform: uppercase; }
         button:hover { background: #44ff44; color: #000; }
-        .signal { position: absolute; top: 40px; right: 40px; font-size: 1.2em; }
+        #crosshair { position: absolute; top: 50%; left: 50%; color: #44ff44; transform: translate(-50%, -50%); font-size: 20px; opacity: 0.5; }
     </style>
 </head>
 <body>
 
-<div id="hud">
-    <div class="signal">SIGNAL: AUDIO <span id="vol-text" style="color: #ff3333">100%</span></div>
-    
-    <div id="top-left" class="box">
-        <h3 style="margin:0;">INCIDENT 01: RECOVERY</h3>
-        <p style="font-size:0.85em">Visual fidelity: Upgraded.</p>
-        <button onclick="startGame()">INITIALIZE FEED</button>
-    </div>
-
-    <div id="bottom-msg" class="box" style="display:none;">
-        <p id="narrative-text">"The ground felt like ash..."</p>
-        <button onclick="closeUI()">CONTINUE</button>
-    </div>
-
-    <div id="radar-ui">
-        <span>entity-blip</span>
-        <div id="radar-circle"><div id="blip"></div></div>
+<div id="menu" class="ui-layer">
+    <div class="log-box">
+        <h1>RECOVERY PROTOCOL</h1>
+        <p>PROJECT: DEAD SILENCE</p>
+        <button onclick="showPage(1)">START RECONSTRUCTION</button>
     </div>
 </div>
 
-<script>
-let scene, camera, renderer, fireLight, entity, isPlaying = false;
-let keys = {}, yaw = 0, pitch = 0, audioVol = 100;
+<div id="page1" class="ui-layer" style="display:none;">
+    <div class="log-box">
+        <h3>STATION LOG: 01</h3>
+        <p>"Liam was found 4 miles from the campsite. He wouldn't stop talking about the textures of the night... how the ground felt like ash."</p>
+        <button onclick="showPage(2)">NEXT</button>
+    </div>
+</div>
 
-function startGame() {
-    document.getElementById('top-left').style.display = 'none';
-    document.getElementById('bottom-msg').style.display = 'block';
+<div id="page2" class="ui-layer" style="display:none;">
+    <div class="log-box">
+        <h3>STATION LOG: 02</h3>
+        <p>"We are using a neural link to visualize his memory. The 'Beauty' he described... she's in there with him."</p>
+        <button onclick="showPage(3)">NEXT</button>
+    </div>
+</div>
+
+<div id="page3" class="ui-layer" style="display:none;">
+    <div class="log-box">
+        <h3>STATION LOG: 03</h3>
+        <p><strong>WARNING:</strong> Neural feedback is high. If she reaches you, the link will sever.</p>
+        <button onclick="beginDeployment()">INITIALIZE FEED</button>
+    </div>
+</div>
+
+<div id="hud">
+    <div id="crosshair">+</div>
+    <div style="position:absolute; top:40px; left:40px;">SIGNAL: <span style="color:red">100%</span></div>
+    <div class="radar"><div id="blip"></div></div>
+</div>
+
+<script>
+let scene, camera, renderer, entity, fireLight, isPlaying = false;
+let keys = {}, yaw = 0, pitch = 0;
+
+function showPage(num) {
+    document.querySelectorAll('.ui-layer').forEach(p => p.style.display = 'none');
+    document.getElementById('page' + num).style.display = 'flex';
 }
 
-function closeUI() {
-    document.getElementById('bottom-msg').style.display = 'none';
+function beginDeployment() {
+    document.querySelectorAll('.ui-layer').forEach(p => p.style.display = 'none');
+    document.getElementById('hud').style.display = 'block';
+    initGame();
     document.body.requestPointerLock();
     isPlaying = true;
 }
 
-function init() {
+function initGame() {
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x050505);
-    scene.fog = new THREE.FogExp2(0x080808, 0.1);
+    scene.background = new THREE.Color(0x020502);
+    scene.fog = new THREE.FogExp2(0x020502, 0.12);
 
-    camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 3, 12);
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 2.5, 10); // Standard human height
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    // Ground Circle
-    const ground = new THREE.Mesh(
-        new THREE.CircleGeometry(15, 64), 
-        new THREE.MeshStandardMaterial({ color: 0x1a1410 })
-    );
+    // FIX: THE GROUND (Ashy Texture)
+    const groundGeo = new THREE.CircleGeometry(20, 32);
+    const groundMat = new THREE.MeshStandardMaterial({ color: 0x1a1410, roughness: 1 });
+    const ground = new THREE.Mesh(groundGeo, groundMat);
     ground.rotation.x = -Math.PI / 2;
     scene.add(ground);
 
-    // Fire
-    fireLight = new THREE.PointLight(0xff6600, 2, 25);
+    // LIGHTING
+    fireLight = new THREE.PointLight(0xff4400, 3, 20);
     fireLight.position.set(0, 1, 0);
     scene.add(fireLight);
+    scene.add(new THREE.AmbientLight(0x0a140a, 0.5));
 
-    // Trees
-    for(let i=0; i<70; i++) {
-        const tree = new THREE.Mesh(new THREE.ConeGeometry(1, 12, 4), new THREE.MeshStandardMaterial({ color: 0x000000 }));
-        let a = Math.random() * Math.PI * 2, d = 16 + Math.random() * 20;
-        tree.position.set(Math.cos(a)*d, 6, Math.sin(a)*d);
+    // TREES
+    for(let i=0; i<50; i++) {
+        const tree = new THREE.Mesh(new THREE.ConeGeometry(1, 10, 4), new THREE.MeshStandardMaterial({color: 0x000000}));
+        let a = Math.random() * Math.PI * 2, d = 14 + Math.random() * 15;
+        tree.position.set(Math.cos(a)*d, 5, Math.sin(a)*d);
         scene.add(tree);
     }
 
-    // The Beauty
-    entity = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.5, 2), new THREE.MeshBasicMaterial({ color: 0xeeeeee }));
-    entity.position.set(10, 1, -5);
+    // ENTITY
+    entity = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.5, 2), new THREE.MeshBasicMaterial({color: 0xeeeeee}));
+    entity.position.set(12, 1, -5);
     scene.add(entity);
 
     animate();
@@ -98,32 +116,40 @@ function init() {
 
 function animate() {
     requestAnimationFrame(animate);
-    if(fireLight) fireLight.intensity = 2 + Math.random() * 0.5;
+    if (isPlaying) {
+        fireLight.intensity = 2.5 + Math.random() * 1;
 
-    if(isPlaying) {
-        if (keys['KeyW']) camera.translateZ(-0.1);
-        if (keys['KeyS']) camera.translateZ(0.1);
+        // FIX: CONTROLS
+        const speed = 0.08;
+        if (keys['KeyW']) camera.translateZ(-speed);
+        if (keys['KeyS']) camera.translateZ(speed);
+        if (keys['KeyA']) camera.translateX(-speed);
+        if (keys['KeyD']) camera.translateX(speed);
+        camera.position.y = 2.5; // Keep player on the ground
 
-        // Entity Stalking
-        let dist = camera.position.distanceTo(entity.position);
+        // STALKING AI
         let dir = new THREE.Vector3().subVectors(camera.position, entity.position).normalize();
-        entity.position.add(dir.multiplyScalar(0.04)); 
+        entity.position.add(dir.multiplyScalar(0.03));
         entity.lookAt(camera.position.x, 1, camera.position.z);
 
-        // Update Radar
+        // RADAR BLIP
         const blip = document.getElementById('blip');
-        blip.style.left = (50 + (entity.position.x - camera.position.x) * 3) + '%';
-        blip.style.top = (50 + (entity.position.z - camera.position.z) * 3) + '%';
+        let dx = (entity.position.x - camera.position.x) * 4;
+        let dz = (entity.position.z - camera.position.z) * 4;
+        blip.style.left = (50 + dx) + '%';
+        blip.style.top = (50 + dz) + '%';
 
-        if(dist < 2) {
+        if (camera.position.distanceTo(entity.position) < 2) {
             isPlaying = false;
-            alert("LINK SEVERED: SHE FOUND YOU");
+            document.exitPointerLock();
+            alert("NEURAL LINK SEVERED: SHE FOUND YOU");
             location.reload();
         }
     }
     renderer.render(scene, camera);
 }
 
+// CONTROL EVENT LISTENERS
 document.addEventListener('keydown', e => keys[e.code] = true);
 document.addEventListener('keyup', e => keys[e.code] = false);
 document.addEventListener('mousemove', e => {
@@ -133,8 +159,8 @@ document.addEventListener('mousemove', e => {
         camera.rotation.set(pitch, yaw, 0, 'YXZ');
     }
 });
+document.addEventListener('click', () => { if(!isPlaying && document.getElementById('hud').style.display === 'block') document.body.requestPointerLock(); });
 
-init();
 </script>
 </body>
 </html>

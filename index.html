@@ -2,59 +2,57 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Incident 01: Pine Ridge</title>
+    <title>Dead Silent - Chapter 1</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         body { margin: 0; background: #000; color: #44ff44; font-family: 'Courier New', monospace; overflow: hidden; }
         .ui-layer { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; z-index: 100; text-align: center; padding: 40px; }
-        .log-box { border: 1px solid #44ff44; padding: 30px; background: rgba(0,10,0,0.95); max-width: 600px; line-height: 1.6; }
+        .log-box { border: 1px solid #44ff44; padding: 30px; background: rgba(0,10,0,0.95); max-width: 600px; box-shadow: 0 0 20px rgba(0,255,0,0.2); }
         #hud { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 50; }
         .radar { position: absolute; bottom: 40px; right: 40px; width: 120px; height: 120px; border: 1px solid #44ff44; border-radius: 50%; }
         #blip { position: absolute; width: 6px; height: 6px; background: #ff0000; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%); }
-        button { background: transparent; color: #44ff44; border: 1px solid #44ff44; padding: 10px 20px; cursor: pointer; margin-top: 20px; font-family: inherit; letter-spacing: 2px; }
+        button { background: transparent; color: #44ff44; border: 1px solid #44ff44; padding: 12px 25px; cursor: pointer; margin-top: 20px; font-family: inherit; letter-spacing: 2px; }
         button:hover { background: #44ff44; color: #000; }
-        #subtitles { position: absolute; bottom: 15%; width: 100%; text-align: center; color: white; font-size: 1.2em; text-shadow: 2px 2px 4px #000; pointer-events: none; display: none; }
+        #subtitles { position: absolute; bottom: 12%; width: 100%; text-align: center; color: white; font-size: 1.3em; text-shadow: 2px 2px 4px #000; pointer-events: none; }
+        .story-img { width: 100%; height: 250px; background: #111; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; border: 1px solid #222; }
     </style>
 </head>
 <body>
 
-<div id="p1" class="ui-layer">
+<div id="menu" class="ui-layer">
     <div class="log-box">
-        <h2>LIAM'S RECONSTRUCTION: PHASE 1</h2>
-        <p>"We were just making dinner. Mark was complaining about the damp wood, Sarah was laughing... it was a normal camping trip. Then, it just happened."</p>
-        <button onclick="nextPage('p2')">CONTINUE MEMORY</button>
+        <h1 style="letter-spacing: 10px;">DEAD SILENT</h1>
+        <h2 style="color: #888;">Chapter 1: Liam and The Beauty in the Wood</h2>
+        <button onclick="showPage('p1')">ACCESS MEMORY</button>
+    </div>
+</div>
+
+<div id="p1" class="ui-layer" style="display:none">
+    <div class="log-box">
+        <div class="story-img">🏕️ [RECONSTRUCTING IMAGE: DINNER PREP]</div>
+        <p>"We were just making dinner. Mark was complaining about the wood... Sarah was laughing. It was normal. Then, the sound just... died."</p>
+        <button onclick="showPage('p2')">CONTINUE</button>
     </div>
 </div>
 
 <div id="p2" class="ui-layer" style="display:none">
     <div class="log-box">
-        <h2>PHASE 2: THE SILENCE</h2>
-        <p>"The laughter didn't stop—it faded. The crickets, the wind in the pines, even the crackle of the fire... it all went mute. Like someone turned a dial to zero. And then I saw her across the clearing."</p>
-        <button onclick="nextPage('p3')">CONTINUE MEMORY</button>
+        <div class="story-img">🌲 [RECONSTRUCTING IMAGE: THE SILENT WOODS]</div>
+        <p>"Everything went mute. No crickets. No wind. Just total silence. That's when I saw her. A beautiful girl in a pale dress, standing in the mist."</p>
+        <button onclick="showPage('p3')">CONTINUE</button>
     </div>
 </div>
 
 <div id="p3" class="ui-layer" style="display:none">
     <div class="log-box">
-        <h2>PHASE 3: THE ENCOUNTER</h2>
-        <p>"She was the most beautiful girl I’d ever seen. Pale dress, standing perfectly still in the shadows. I walked toward her, wanting to help, thinking she was lost. I didn't realize I was the one who was lost."</p>
-        <button onclick="initAudio(); startGame();">ENGAGE NEURAL FEED</button>
-    </div>
-</div>
-
-<div id="conclusion" class="ui-layer" style="display:none">
-    <div class="log-box">
-        <h2>RECONSTRUCTION COMPLETE</h2>
-        <p><strong>LIAM:</strong> "She just... vanished into the mist. It was so graceful, so mysterious. I wanted to follow her to see where she went."</p>
-        <p style="color: red; border-top: 1px solid red; margin-top: 20px; padding-top: 10px;">
-            <strong>ANALYSIS:</strong> Subject remains unaware of the predatory nature of the entity. Entity used auditory vacuum to isolate the target.
-        </p>
-        <button onclick="location.reload()">RE-SYNC</button>
+        <div class="story-img">👤 [RECONSTRUCTING IMAGE: THE APPROACH]</div>
+        <p>"I thought she was lost. I wanted to help her. I started walking, but every time I got close, she seemed to slip further into the dark."</p>
+        <button onclick="startNeuralFeed()">ENGAGE FEED</button>
     </div>
 </div>
 
 <div id="hud">
-    <div style="position:absolute; top:40px; left:40px;">SIGNAL STABILITY: <span id="sig">100%</span></div>
+    <div style="position:absolute; top:40px; left:40px;">SIGNAL FIDELITY: <span id="sig">100%</span></div>
     <div class="radar"><div id="blip"></div></div>
     <div id="subtitles"></div>
 </div>
@@ -62,128 +60,95 @@
 <script>
 let scene, camera, renderer, entity, fireLight, isPlaying = false;
 let keys = {}, yaw = 0, pitch = 0, signal = 100;
-let audioCtx, droneGain, staticGain;
 
-function nextPage(id) {
-    document.querySelectorAll('.ui-layer').forEach(p => p.style.display = 'none');
+function showPage(id) {
+    document.querySelectorAll('.ui-layer').forEach(l => l.style.display = 'none');
     document.getElementById(id).style.display = 'flex';
 }
 
-function initAudio() {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    droneGain = audioCtx.createGain();
-    staticGain = audioCtx.createGain();
-    
-    // Low drone representing the "silence"
-    let osc = audioCtx.createOscillator();
-    osc.frequency.value = 60;
-    osc.connect(droneGain).connect(audioCtx.destination);
-    
-    // Static for signal loss
-    let noise = audioCtx.createOscillator();
-    noise.type = 'square';
-    noise.frequency.value = 120;
-    noise.connect(staticGain).connect(audioCtx.destination);
-
-    osc.start(); noise.start();
-    droneGain.gain.value = 0.1;
-    staticGain.gain.value = 0;
-}
-
-function startGame() {
-    nextPage('none');
+function startNeuralFeed() {
+    document.querySelectorAll('.ui-layer').forEach(l => l.style.display = 'none');
     document.getElementById('hud').style.display = 'block';
-    initScene();
+    initWorld();
     document.body.requestPointerLock();
     isPlaying = true;
 }
 
-function initScene() {
+function initWorld() {
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x020502);
-    scene.fog = new THREE.FogExp2(0x020502, 0.1);
+    scene.background = new THREE.Color(0x010301);
+    scene.fog = new THREE.FogExp2(0x010301, 0.1);
 
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 2.5, 12);
+    camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 2, 10);
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    // Ground circle
-    const ground = new THREE.Mesh(new THREE.CircleGeometry(25, 32), new THREE.MeshStandardMaterial({ color: 0x1a1410 }));
+    // Ground
+    const ground = new THREE.Mesh(new THREE.CircleGeometry(30, 32), new THREE.MeshStandardMaterial({color: 0x110f0c}));
     ground.rotation.x = -Math.PI/2;
     scene.add(ground);
 
-    fireLight = new THREE.PointLight(0xff4400, 3, 20);
+    fireLight = new THREE.PointLight(0xff4400, 4, 20);
     scene.add(fireLight);
+    scene.add(new THREE.AmbientLight(0x0a1a0a, 0.5));
 
-    // Beautiful Girl (Entity)
-    entity = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.5, 2.5), new THREE.MeshBasicMaterial({color: 0xeeeeee}));
-    entity.position.set(8, 1.25, -8);
+    // Entity (The Beauty)
+    entity = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.4, 2.2), new THREE.MeshBasicMaterial({color: 0xdddddd}));
+    entity.position.set(10, 1.1, -10);
     scene.add(entity);
 
-    animate();
+    loop();
 }
 
-function animate() {
-    requestAnimationFrame(animate);
-    if (!isPlaying) return;
+function loop() {
+    requestAnimationFrame(loop);
+    if(!isPlaying) return;
 
-    fireLight.intensity = 2 + Math.random();
+    fireLight.intensity = 3 + Math.random() * 2;
+    let dist = camera.position.distanceTo(entity.position);
+    let sub = document.getElementById('subtitles');
 
-    // Gameplay: Staring logic
+    // Staring Mechanic
     let ray = new THREE.Raycaster();
     ray.setFromCamera(new THREE.Vector2(0,0), camera);
-    let lookingAtHer = ray.intersectObject(entity).length > 0;
-
-    const sub = document.getElementById('subtitles');
-    if (lookingAtHer) {
-        signal = Math.min(100, signal + 0.8);
-        sub.style.display = "block";
-        sub.innerText = "LIAM: 'Wait... don't go. Are you okay?'";
-        if (signal > 99) {
-            // Trigger Conclusion when "captured" her vanishing
-            isPlaying = false;
-            document.exitPointerLock();
-            nextPage('conclusion');
+    if(ray.intersectObject(entity).length > 0) {
+        signal = Math.min(100, signal + 1.2);
+        sub.innerText = "LIAM: 'Hello? Don't be afraid...'";
+        if(signal > 99.5) { // Success: She vanishes
+            alert("MEMORY CAPTURED: She vanished as gracefully as she arrived.");
+            location.reload();
         }
     } else {
-        signal -= 0.15;
-        sub.style.display = "none";
-        // Approach logic
+        signal -= 0.08;
+        sub.innerText = dist < 8 ? "LIAM: 'Wait... where are you going?'" : "";
+        // Creeping (Slower approach)
         let dir = new THREE.Vector3().subVectors(camera.position, entity.position).normalize();
-        entity.position.add(dir.multiplyScalar(0.04));
-        entity.lookAt(camera.position.x, 1.25, camera.position.z);
+        entity.position.add(dir.multiplyScalar(0.015)); 
+        entity.lookAt(camera.position.x, 1.1, camera.position.z);
     }
 
-    // Audio / UI update
-    staticGain.gain.value = (1 - signal/100) * 0.3;
     document.getElementById('sig').innerText = Math.floor(signal) + "%";
-    
-    // Radar
     const blip = document.getElementById('blip');
     blip.style.left = 50 + (entity.position.x - camera.position.x) * 4 + "%";
     blip.style.top = 50 + (entity.position.z - camera.position.z) * 4 + "%";
 
-    // Controls
-    if (keys['KeyW']) camera.translateZ(-0.1);
-    if (keys['KeyS']) camera.translateZ(0.1);
+    if(keys['KeyW']) camera.translateZ(-0.08);
+    if(keys['KeyS']) camera.translateZ(0.08);
 
-    // Dangerous Entity Win Condition
-    if (camera.position.distanceTo(entity.position) < 2.2) {
-        isPlaying = false;
-        alert("SIGNAL LOST: NEURAL COLLAPSE");
+    if(signal <= 0 || dist < 2) {
+        alert("LINK SEVERED: SUBJECT FATALITY");
         location.reload();
     }
-
     renderer.render(scene, camera);
 }
 
 document.addEventListener('keydown', e => keys[e.code] = true);
 document.addEventListener('keyup', e => keys[e.code] = false);
 document.addEventListener('mousemove', e => {
-    if (isPlaying) {
+    if(isPlaying) {
         yaw -= e.movementX * 0.002;
         pitch = Math.max(-1.4, Math.min(1.4, pitch - e.movementY * 0.002));
         camera.rotation.set(pitch, yaw, 0, 'YXZ');

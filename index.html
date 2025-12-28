@@ -6,109 +6,121 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         body { margin: 0; background: #000; color: #44ff44; font-family: 'Courier New', monospace; overflow: hidden; }
-        .ui-layer { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; z-index: 100; text-align: center; padding: 20px; }
-        .log-box { border: 1px solid #44ff44; padding: 30px; background: rgba(0,20,0,0.9); max-width: 500px; box-shadow: 0 0 15px rgba(0,255,0,0.2); }
+        .ui-layer { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; z-index: 100; text-align: center; padding: 40px; }
+        .log-box { border: 1px solid #44ff44; padding: 30px; background: rgba(0,10,0,0.95); max-width: 600px; line-height: 1.6; }
         #hud { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 50; }
         .radar { position: absolute; bottom: 40px; right: 40px; width: 120px; height: 120px; border: 1px solid #44ff44; border-radius: 50%; }
-        #blip { position: absolute; width: 6px; height: 6px; background: #ff0000; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%); box-shadow: 0 0 10px #f00; }
-        button { background: transparent; color: #44ff44; border: 1px solid #44ff44; padding: 10px 20px; cursor: pointer; margin-top: 20px; font-family: inherit; text-transform: uppercase; }
+        #blip { position: absolute; width: 6px; height: 6px; background: #ff0000; border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+        button { background: transparent; color: #44ff44; border: 1px solid #44ff44; padding: 10px 20px; cursor: pointer; margin-top: 20px; font-family: inherit; letter-spacing: 2px; }
         button:hover { background: #44ff44; color: #000; }
-        #crosshair { position: absolute; top: 50%; left: 50%; color: #44ff44; transform: translate(-50%, -50%); font-size: 20px; opacity: 0.5; }
+        #subtitles { position: absolute; bottom: 15%; width: 100%; text-align: center; color: white; font-size: 1.2em; text-shadow: 2px 2px 4px #000; pointer-events: none; display: none; }
     </style>
 </head>
 <body>
 
-<div id="menu" class="ui-layer">
+<div id="p1" class="ui-layer">
     <div class="log-box">
-        <h1>RECOVERY PROTOCOL</h1>
-        <p>PROJECT: DEAD SILENCE</p>
-        <button onclick="showPage(1)">START RECONSTRUCTION</button>
+        <h2>LIAM'S RECONSTRUCTION: PHASE 1</h2>
+        <p>"We were just making dinner. Mark was complaining about the damp wood, Sarah was laughing... it was a normal camping trip. Then, it just happened."</p>
+        <button onclick="nextPage('p2')">CONTINUE MEMORY</button>
     </div>
 </div>
 
-<div id="page1" class="ui-layer" style="display:none;">
+<div id="p2" class="ui-layer" style="display:none">
     <div class="log-box">
-        <h3>STATION LOG: 01</h3>
-        <p>"Liam was found 4 miles from the campsite. He wouldn't stop talking about the textures of the night... how the ground felt like ash."</p>
-        <button onclick="showPage(2)">NEXT</button>
+        <h2>PHASE 2: THE SILENCE</h2>
+        <p>"The laughter didn't stop—it faded. The crickets, the wind in the pines, even the crackle of the fire... it all went mute. Like someone turned a dial to zero. And then I saw her across the clearing."</p>
+        <button onclick="nextPage('p3')">CONTINUE MEMORY</button>
     </div>
 </div>
 
-<div id="page2" class="ui-layer" style="display:none;">
+<div id="p3" class="ui-layer" style="display:none">
     <div class="log-box">
-        <h3>STATION LOG: 02</h3>
-        <p>"We are using a neural link to visualize his memory. The 'Beauty' he described... she's in there with him."</p>
-        <button onclick="showPage(3)">NEXT</button>
+        <h2>PHASE 3: THE ENCOUNTER</h2>
+        <p>"She was the most beautiful girl I’d ever seen. Pale dress, standing perfectly still in the shadows. I walked toward her, wanting to help, thinking she was lost. I didn't realize I was the one who was lost."</p>
+        <button onclick="initAudio(); startGame();">ENGAGE NEURAL FEED</button>
     </div>
 </div>
 
-<div id="page3" class="ui-layer" style="display:none;">
+<div id="conclusion" class="ui-layer" style="display:none">
     <div class="log-box">
-        <h3>STATION LOG: 03</h3>
-        <p><strong>WARNING:</strong> Neural feedback is high. If she reaches you, the link will sever.</p>
-        <button onclick="beginDeployment()">INITIALIZE FEED</button>
+        <h2>RECONSTRUCTION COMPLETE</h2>
+        <p><strong>LIAM:</strong> "She just... vanished into the mist. It was so graceful, so mysterious. I wanted to follow her to see where she went."</p>
+        <p style="color: red; border-top: 1px solid red; margin-top: 20px; padding-top: 10px;">
+            <strong>ANALYSIS:</strong> Subject remains unaware of the predatory nature of the entity. Entity used auditory vacuum to isolate the target.
+        </p>
+        <button onclick="location.reload()">RE-SYNC</button>
     </div>
 </div>
 
 <div id="hud">
-    <div id="crosshair">+</div>
-    <div style="position:absolute; top:40px; left:40px;">SIGNAL: <span style="color:red">100%</span></div>
+    <div style="position:absolute; top:40px; left:40px;">SIGNAL STABILITY: <span id="sig">100%</span></div>
     <div class="radar"><div id="blip"></div></div>
+    <div id="subtitles"></div>
 </div>
 
 <script>
 let scene, camera, renderer, entity, fireLight, isPlaying = false;
-let keys = {}, yaw = 0, pitch = 0;
+let keys = {}, yaw = 0, pitch = 0, signal = 100;
+let audioCtx, droneGain, staticGain;
 
-function showPage(num) {
+function nextPage(id) {
     document.querySelectorAll('.ui-layer').forEach(p => p.style.display = 'none');
-    document.getElementById('page' + num).style.display = 'flex';
+    document.getElementById(id).style.display = 'flex';
 }
 
-function beginDeployment() {
-    document.querySelectorAll('.ui-layer').forEach(p => p.style.display = 'none');
+function initAudio() {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    droneGain = audioCtx.createGain();
+    staticGain = audioCtx.createGain();
+    
+    // Low drone representing the "silence"
+    let osc = audioCtx.createOscillator();
+    osc.frequency.value = 60;
+    osc.connect(droneGain).connect(audioCtx.destination);
+    
+    // Static for signal loss
+    let noise = audioCtx.createOscillator();
+    noise.type = 'square';
+    noise.frequency.value = 120;
+    noise.connect(staticGain).connect(audioCtx.destination);
+
+    osc.start(); noise.start();
+    droneGain.gain.value = 0.1;
+    staticGain.gain.value = 0;
+}
+
+function startGame() {
+    nextPage('none');
     document.getElementById('hud').style.display = 'block';
-    initGame();
+    initScene();
     document.body.requestPointerLock();
     isPlaying = true;
 }
 
-function initGame() {
+function initScene() {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x020502);
-    scene.fog = new THREE.FogExp2(0x020502, 0.12);
+    scene.fog = new THREE.FogExp2(0x020502, 0.1);
 
     camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 2.5, 10); // Standard human height
+    camera.position.set(0, 2.5, 12);
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    // FIX: THE GROUND (Ashy Texture)
-    const groundGeo = new THREE.CircleGeometry(20, 32);
-    const groundMat = new THREE.MeshStandardMaterial({ color: 0x1a1410, roughness: 1 });
-    const ground = new THREE.Mesh(groundGeo, groundMat);
-    ground.rotation.x = -Math.PI / 2;
+    // Ground circle
+    const ground = new THREE.Mesh(new THREE.CircleGeometry(25, 32), new THREE.MeshStandardMaterial({ color: 0x1a1410 }));
+    ground.rotation.x = -Math.PI/2;
     scene.add(ground);
 
-    // LIGHTING
     fireLight = new THREE.PointLight(0xff4400, 3, 20);
-    fireLight.position.set(0, 1, 0);
     scene.add(fireLight);
-    scene.add(new THREE.AmbientLight(0x0a140a, 0.5));
 
-    // TREES
-    for(let i=0; i<50; i++) {
-        const tree = new THREE.Mesh(new THREE.ConeGeometry(1, 10, 4), new THREE.MeshStandardMaterial({color: 0x000000}));
-        let a = Math.random() * Math.PI * 2, d = 14 + Math.random() * 15;
-        tree.position.set(Math.cos(a)*d, 5, Math.sin(a)*d);
-        scene.add(tree);
-    }
-
-    // ENTITY
-    entity = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.5, 2), new THREE.MeshBasicMaterial({color: 0xeeeeee}));
-    entity.position.set(12, 1, -5);
+    // Beautiful Girl (Entity)
+    entity = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.5, 2.5), new THREE.MeshBasicMaterial({color: 0xeeeeee}));
+    entity.position.set(8, 1.25, -8);
     scene.add(entity);
 
     animate();
@@ -116,51 +128,67 @@ function initGame() {
 
 function animate() {
     requestAnimationFrame(animate);
-    if (isPlaying) {
-        fireLight.intensity = 2.5 + Math.random() * 1;
+    if (!isPlaying) return;
 
-        // FIX: CONTROLS
-        const speed = 0.08;
-        if (keys['KeyW']) camera.translateZ(-speed);
-        if (keys['KeyS']) camera.translateZ(speed);
-        if (keys['KeyA']) camera.translateX(-speed);
-        if (keys['KeyD']) camera.translateX(speed);
-        camera.position.y = 2.5; // Keep player on the ground
+    fireLight.intensity = 2 + Math.random();
 
-        // STALKING AI
-        let dir = new THREE.Vector3().subVectors(camera.position, entity.position).normalize();
-        entity.position.add(dir.multiplyScalar(0.03));
-        entity.lookAt(camera.position.x, 1, camera.position.z);
+    // Gameplay: Staring logic
+    let ray = new THREE.Raycaster();
+    ray.setFromCamera(new THREE.Vector2(0,0), camera);
+    let lookingAtHer = ray.intersectObject(entity).length > 0;
 
-        // RADAR BLIP
-        const blip = document.getElementById('blip');
-        let dx = (entity.position.x - camera.position.x) * 4;
-        let dz = (entity.position.z - camera.position.z) * 4;
-        blip.style.left = (50 + dx) + '%';
-        blip.style.top = (50 + dz) + '%';
-
-        if (camera.position.distanceTo(entity.position) < 2) {
+    const sub = document.getElementById('subtitles');
+    if (lookingAtHer) {
+        signal = Math.min(100, signal + 0.8);
+        sub.style.display = "block";
+        sub.innerText = "LIAM: 'Wait... don't go. Are you okay?'";
+        if (signal > 99) {
+            // Trigger Conclusion when "captured" her vanishing
             isPlaying = false;
             document.exitPointerLock();
-            alert("NEURAL LINK SEVERED: SHE FOUND YOU");
-            location.reload();
+            nextPage('conclusion');
         }
+    } else {
+        signal -= 0.15;
+        sub.style.display = "none";
+        // Approach logic
+        let dir = new THREE.Vector3().subVectors(camera.position, entity.position).normalize();
+        entity.position.add(dir.multiplyScalar(0.04));
+        entity.lookAt(camera.position.x, 1.25, camera.position.z);
     }
+
+    // Audio / UI update
+    staticGain.gain.value = (1 - signal/100) * 0.3;
+    document.getElementById('sig').innerText = Math.floor(signal) + "%";
+    
+    // Radar
+    const blip = document.getElementById('blip');
+    blip.style.left = 50 + (entity.position.x - camera.position.x) * 4 + "%";
+    blip.style.top = 50 + (entity.position.z - camera.position.z) * 4 + "%";
+
+    // Controls
+    if (keys['KeyW']) camera.translateZ(-0.1);
+    if (keys['KeyS']) camera.translateZ(0.1);
+
+    // Dangerous Entity Win Condition
+    if (camera.position.distanceTo(entity.position) < 2.2) {
+        isPlaying = false;
+        alert("SIGNAL LOST: NEURAL COLLAPSE");
+        location.reload();
+    }
+
     renderer.render(scene, camera);
 }
 
-// CONTROL EVENT LISTENERS
 document.addEventListener('keydown', e => keys[e.code] = true);
 document.addEventListener('keyup', e => keys[e.code] = false);
 document.addEventListener('mousemove', e => {
-    if (document.pointerLockElement) {
+    if (isPlaying) {
         yaw -= e.movementX * 0.002;
         pitch = Math.max(-1.4, Math.min(1.4, pitch - e.movementY * 0.002));
         camera.rotation.set(pitch, yaw, 0, 'YXZ');
     }
 });
-document.addEventListener('click', () => { if(!isPlaying && document.getElementById('hud').style.display === 'block') document.body.requestPointerLock(); });
-
 </script>
 </body>
 </html>

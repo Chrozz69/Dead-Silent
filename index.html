@@ -2,209 +2,187 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Dead Silent - Chapter 1</title>
+    <title>Dead Silent</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         body { margin: 0; background: #000; color: #44ff44; font-family: 'Courier New', monospace; overflow: hidden; }
-        .ui-layer { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #000; z-index: 100; text-align: center; padding: 40px; transition: opacity 0.5s; }
-        .log-box { border: 1px solid #44ff44; padding: 30px; background: rgba(0,10,0,0.95); max-width: 600px; box-shadow: 0 0 20px rgba(0,255,0,0.2); }
-        #hud { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 50; }
-        #subtitles { position: absolute; bottom: 12%; width: 100%; text-align: center; color: white; font-size: 1.3em; text-shadow: 2px 2px 4px #000; }
-        button { background: transparent; color: #44ff44; border: 1px solid #44ff44; padding: 12px 25px; cursor: pointer; margin-top: 20px; font-family: inherit; letter-spacing: 2px; }
-        button:hover { background: #44ff44; color: #000; }
-        .story-img { width: 100%; height: 320px; border: 1px solid #44ff44; margin-bottom: 20px; display: block; object-fit: cover; }
-        #vol-bar { width: 200px; height: 10px; border: 1px solid #44ff44; margin-top: 10px; }
-        #vol-fill { width: 100%; height: 100%; background: #44ff44; transition: width 0.1s; }
-        #crosshair { position: absolute; top: 50%; left: 50%; width: 20px; height: 20px; border: 1px solid rgba(255,255,255,0.3); transform: translate(-50%, -50%); border-radius: 50%; }
+        .ui-layer { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.9); z-index: 100; text-align: center; }
+        .log-box { border: 1px solid #44ff44; padding: 40px; background: rgba(0,10,0,0.95); min-width: 400px; box-shadow: 0 0 30px rgba(0,255,0,0.2); }
+        h1 { letter-spacing: 12px; margin-bottom: 30px; text-shadow: 0 0 10px #44ff44; }
+        button { background: transparent; color: #44ff44; border: 1px solid #44ff44; padding: 12px 30px; cursor: pointer; margin: 10px; font-family: inherit; font-size: 1.1em; transition: 0.3s; width: 250px; }
+        button:hover:not(:disabled) { background: #44ff44; color: #000; }
+        button:disabled { border-color: #222; color: #222; cursor: not-allowed; }
+        .setting-row { margin: 15px 0; display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        #subtitles { position: absolute; bottom: 15%; width: 100%; text-align: center; color: white; font-size: 1.4em; text-shadow: 2px 2px 4px #000; z-index: 50; pointer-events: none; }
+        #canvas-container { position: absolute; inset: 0; z-index: 1; }
+        input[type=range] { accent-color: #44ff44; width: 150px; }
     </style>
 </head>
 <body>
 
-<div id="menu" class="ui-layer">
+<div id="canvas-container"></div>
+
+<div id="main-menu" class="ui-layer">
     <div class="log-box">
-        <h1 style="letter-spacing: 10px;">DEAD SILENT</h1>
-        <h2 style="color: #888;">Chapter 1: Liam and The Beauty in the Wood</h2>
-        <button onclick="showPage('p1')">RESTORE MEMORY</button>
+        <h1>DEAD SILENT</h1>
+        <button onclick="showUI('chapter-select')">START</button><br>
+        <button onclick="showUI('settings')">SETTINGS</button><br>
+        <button onclick="window.close(); alert('Exit protocol initialized.')">EXIT</button>
     </div>
 </div>
 
-<div id="p1" class="ui-layer" style="display:none">
+<div id="settings" class="ui-layer" style="display:none">
     <div class="log-box">
-        <img src="https://i.ibb.co/3WqVf9L/campfire-prep.jpg" class="story-img" onerror="this.src='https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?w=600'">
-        <p>"Mark was complaining about the damp wood. Sarah was just laughing at him. We were happy. We were... loud."</p>
-        <button onclick="showPage('p2')">CONTINUE</button>
+        <h2>CONFIGURATION</h2>
+        <div class="setting-row"><span>VOLUME</span><input type="range" id="vol-slider" oninput="updateSettings()"></div>
+        <div class="setting-row"><span>LIGHTING</span><input type="range" id="light-slider" oninput="updateSettings()"></div>
+        <div class="setting-row"><span>SCHEME</span><select id="color-scheme" onchange="updateSettings()"><option value="green">NEURAL GREEN</option><option value="amber">STATION AMBER</option></select></div>
+        <button onclick="showUI('main-menu')">BACK</button>
     </div>
 </div>
 
-<div id="p2" class="ui-layer" style="display:none">
+<div id="chapter-select" class="ui-layer" style="display:none">
     <div class="log-box">
-        <img src="https://i.ibb.co/L5rMhP0/the-silence.jpg" class="story-img" onerror="this.src='https://images.unsplash.com/photo-1478720568477-152d9b164e26?w=600'">
-        <p>"Then the sound died. The forest went mute. I looked up, and I saw her. A white dress in the thick of the pines."</p>
-        <button onclick="showPage('p3')">CONTINUE</button>
+        <h2>RECONSTRUCTION HUB</h2>
+        <button onclick="startChapter1()">CHAPTER 1: LIAM</button><br>
+        <button onclick="alert('WIP: Work in Progress');">CHAPTER 2: THE PARTY</button><br>
+        <button disabled>COMING SOON</button><br>
+        <button onclick="showUI('main-menu')">BACK</button>
     </div>
 </div>
 
-<div id="p3" class="ui-layer" style="display:none">
-    <div class="log-box">
-        <img src="https://i.ibb.co/vYvH6hN/the-encounter.jpg" class="story-img" onerror="this.src='https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=600'">
-        <p>"I walked toward her. I didn't see the hunter... I only saw the beauty. Entering Neural Feed now."</p>
-        <button onclick="initAudio(); startNeuralFeed();">SYNCHRONIZE</button>
-    </div>
-</div>
-
-<div id="hud">
-    <div id="crosshair"></div>
-    <div style="position:absolute; top:40px; left:40px;">
-        NEURAL SYNC
-        <div id="vol-bar"><div id="vol-fill"></div></div>
-    </div>
-    <div id="subtitles"></div>
-</div>
+<div id="subtitles"></div>
 
 <script>
-let scene, camera, renderer, entity, fireLight, isPlaying = false;
-let keys = {}, yaw = 0, pitch = 0, signal = 80;
-let audioCtx, droneGain, staticGain;
+let scene, camera, renderer, entity, fireLight, ambientLight;
+let isPlaying = false, gameState = "menu", encounterCount = 0;
+let yaw = 0, pitch = 0, targetVolume = 0.4, currentVolume = 0.4;
+let audioCtx, drone;
 
-function showPage(id) {
+function showUI(id) {
     document.querySelectorAll('.ui-layer').forEach(l => l.style.display = 'none');
     document.getElementById(id).style.display = 'flex';
+    gameState = (id === 'main-menu') ? "menu" : "ui";
 }
 
-function initAudio() {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    droneGain = audioCtx.createGain(); staticGain = audioCtx.createGain();
-    let osc = audioCtx.createOscillator(); osc.frequency.value = 40;
-    osc.connect(droneGain).connect(audioCtx.destination);
-    let noise = audioCtx.createOscillator(); noise.type = 'square'; noise.frequency.value = 80;
-    noise.connect(staticGain).connect(audioCtx.destination);
-    osc.start(); noise.start();
+function updateSettings() {
+    targetVolume = document.getElementById('vol-slider').value / 100;
+    const lVal = document.getElementById('light-slider').value / 100;
+    if(fireLight) fireLight.intensity = lVal * 5;
+    const color = document.getElementById('color-scheme').value === 'green' ? '#44ff44' : '#ffb000';
+    document.querySelectorAll('.log-box, button').forEach(el => el.style.borderColor = color);
+    document.body.style.color = color;
 }
 
-function startNeuralFeed() {
-    document.querySelectorAll('.ui-layer').forEach(l => l.style.display = 'none');
-    document.getElementById('hud').style.display = 'block';
-    initWorld();
-    document.body.requestPointerLock();
-    isPlaying = true;
-}
-
-function initWorld() {
+// 3D SCENE INITIALIZATION
+function initEngine() {
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000205); 
-    scene.fog = new THREE.FogExp2(0x000205, 0.12);
+    scene.background = new THREE.Color(0x000205);
+    scene.fog = new THREE.FogExp2(0x000205, 0.1);
 
     camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 1.7, 8);
-
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-    // FIX: Ground & Procedural Grass
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(100, 100), new THREE.MeshStandardMaterial({color: 0x050805}));
+    // Basic Environment (Tent, Campfire)
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(50, 50), new THREE.MeshStandardMaterial({color: 0x0a1108}));
     ground.rotation.x = -Math.PI/2;
     scene.add(ground);
 
-    for(let i=0; i<400; i++) {
-        const grass = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.2, 0.05), new THREE.MeshStandardMaterial({color: 0x0a1a0a}));
-        grass.position.set(Math.random()*40-20, 0.1, Math.random()*40-20);
-        scene.add(grass);
-    }
+    const tent = new THREE.Mesh(new THREE.ConeGeometry(2, 2.5, 4), new THREE.MeshStandardMaterial({color: 0x1a2e1a}));
+    tent.position.set(-4, 1.25, -3);
+    scene.add(tent);
 
-    // FIX: Campfire Model
-    const logs = new THREE.Group();
-    for(let i=0; i<4; i++) {
-        const log = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.2, 0.2), new THREE.MeshStandardMaterial({color: 0x2b1d0e}));
-        log.rotation.y = (i * Math.PI) / 2;
-        logs.add(log);
-    }
-    scene.add(logs);
-    fireLight = new THREE.PointLight(0xff4400, 5, 12);
+    fireLight = new THREE.PointLight(0xff4400, 4, 15);
     fireLight.position.set(0, 0.5, 0);
     scene.add(fireLight);
 
-    // FIX: Tent & Friends (Silhouettes)
-    const tent = new THREE.Mesh(new THREE.ConeGeometry(2, 2.5, 4), new THREE.MeshStandardMaterial({color: 0x0a150a}));
-    tent.position.set(-5, 1.25, -4);
-    scene.add(tent);
-
-    const mark = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 1.8), new THREE.MeshStandardMaterial({color: 0x000000}));
-    mark.position.set(2, 0.9, -2);
-    scene.add(mark);
-
-    // FIX: Trees Model
-    for(let i=0; i<50; i++) {
-        const tree = new THREE.Group();
-        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.5, 10), new THREE.MeshStandardMaterial({color: 0x050505}));
-        const leaves = new THREE.Mesh(new THREE.ConeGeometry(2, 6, 8), new THREE.MeshStandardMaterial({color: 0x020802}));
-        leaves.position.y = 6; tree.add(trunk); tree.add(leaves);
-        let a = Math.random()*Math.PI*2, d = 12 + Math.random()*20;
-        tree.position.set(Math.cos(a)*d, 5, Math.sin(a)*d);
-        scene.add(tree);
-    }
-
-    // FIX: THE BEAUTY (Entity)
-    entity = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.4, 2.2), new THREE.MeshBasicMaterial({color: 0xffffff, transparent: true, opacity: 0.6}));
-    entity.position.set(12, 1.1, -12);
+    entity = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.3, 2.2), new THREE.MeshBasicMaterial({color: 0xffffff, transparent:true, opacity:0}));
     scene.add(entity);
 
-    scene.add(new THREE.AmbientLight(0x050a15, 0.2));
-    loop();
+    animate();
 }
 
-function loop() {
-    requestAnimationFrame(loop);
-    if(!isPlaying) return;
+function startChapter1() {
+    showUI('none');
+    gameState = "intro";
+    camera.position.set(0, 1.7, 5);
+    camera.lookAt(0, 0.5, 0); // Focus on fire
+    
+    // Audio Init
+    audioCtx = new AudioContext();
+    drone = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    drone.connect(gain).connect(audioCtx.destination);
+    drone.start();
+    
+    runStorySequence();
+}
 
-    fireLight.intensity = 4 + Math.random() * 2;
-    let dist = camera.position.distanceTo(entity.position);
-    let sub = document.getElementById('subtitles');
-
-    // FIX: Staring Gameplay (Raycaster)
-    let ray = new THREE.Raycaster();
-    ray.setFromCamera(new THREE.Vector2(0,0), camera);
-    if(ray.intersectObject(entity).length > 0) {
-        signal = Math.min(100, signal + 0.8);
-        sub.innerText = "LIAM: 'Who are you...?'";
-        droneGain.gain.setTargetAtTime(0.05, audioCtx.currentTime, 0.1);
-    } else {
-        signal -= 0.12; // Constant drain when not looking
-        sub.innerText = "";
-        // FIX: Creeping Movement
-        let dir = new THREE.Vector3().subVectors(camera.position, entity.position).normalize();
-        entity.position.add(dir.multiplyScalar(0.015)); 
-        entity.lookAt(camera.position.x, 1.1, camera.position.z);
-        droneGain.gain.setTargetAtTime(0.2, audioCtx.currentTime, 0.1);
+async function runStorySequence() {
+    const sub = document.getElementById('subtitles');
+    
+    // Phase 1: Muting Ambient
+    sub.innerText = "LIAM: 'The fire was crackling... but then everything started going quiet.'";
+    await fadeVolume(0, 4000);
+    sub.innerText = "LIAM: 'Wait... why can't I hear the wind? Sarah? Mark?'";
+    
+    // Phase 2: Encounter Loop
+    for(encounterCount = 1; encounterCount <= 3; encounterCount++) {
+        spawnEntity();
+        await lookAtEntity();
+        sub.innerText = encounterCount < 3 ? "LIAM: 'Who is that? Hey! Are you lost?'" : "LIAM: 'She's just... staring.'";
+        
+        await new Promise(r => setTimeout(r, 2000));
+        entity.material.opacity = 0; // Disappear
+        
+        sub.innerText = "LIAM: 'She's gone. And the sound... it's back.'";
+        await fadeVolume(targetVolume, 1500);
+        await new Promise(r => setTimeout(r, 2000));
+        
+        if(encounterCount < 3) {
+            sub.innerText = "LIAM: 'There! She's over there now!'";
+            await fadeVolume(0, 1000);
+        }
     }
+    
+    sub.innerText = "LIAM: 'I thought it was just a weird night. I didn't know I was being hunted.'";
+    setTimeout(() => location.reload(), 5000);
+}
 
-    if(signal > 99.8) { 
-        alert("SYNC SUCCESSFUL: She vanished into the mist. Memory stored.");
-        location.reload();
+function spawnEntity() {
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 8 + Math.random() * 5;
+    entity.position.set(Math.cos(angle)*dist, 1.1, Math.sin(angle)*dist);
+    entity.material.opacity = 0.7;
+}
+
+async function fadeVolume(val, duration) {
+    const start = currentVolume;
+    const steps = 20;
+    for(let i=0; i<=steps; i++) {
+        currentVolume = start + (val - start) * (i/steps);
+        // Apply to audio engine here
+        await new Promise(r => setTimeout(r, duration/steps));
     }
+}
 
-    document.getElementById('vol-fill').style.width = signal + "%";
-    staticGain.gain.value = (1 - signal/100) * 0.3;
+async function lookAtEntity() {
+    const targetPos = entity.position.clone();
+    // Logic to smoothly rotate camera to entity
+    camera.lookAt(targetPos);
+}
 
-    if(keys['KeyW']) camera.translateZ(-0.08);
-    if(keys['KeyS']) camera.translateZ(0.08);
-
-    if(signal <= 0 || dist < 1.8) {
-        alert("LINK SEVERED: SUBJECT LOST");
-        location.reload();
+function animate() {
+    requestAnimationFrame(animate);
+    if(gameState === "menu") {
+        scene.rotation.y += 0.005; // Spinning map review
     }
     renderer.render(scene, camera);
 }
 
-document.addEventListener('keydown', e => keys[e.code] = true);
-document.addEventListener('keyup', e => keys[e.code] = false);
-document.addEventListener('mousemove', e => {
-    if(isPlaying) {
-        yaw -= e.movementX * 0.002;
-        pitch = Math.max(-1.4, Math.min(1.4, pitch - e.movementY * 0.002));
-        camera.rotation.set(pitch, yaw, 0, 'YXZ');
-    }
-});
+initEngine();
 </script>
 </body>
 </html>
